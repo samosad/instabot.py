@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import requests
 import random
 import time
@@ -5,8 +8,10 @@ import datetime
 import logging
 import json
 import atexit
-import signal
 import itertools
+import signal
+
+startTime = datetime.datetime.now()
 
 class InstaBot:
     """
@@ -128,8 +133,7 @@ class InstaBot:
                      (now_time.strftime("%d.%m.%Y %H:%M"))
         self.write_log(log_string)
         self.login()
-
-        signal.signal(signal.SIGTERM, self.cleanup)
+        signal.signal(signal.SIGQUIT, self.cleanup)
         atexit.register(self.cleanup)
 
     def cleanup (self):
@@ -266,6 +270,7 @@ class InstaBot:
                                     log_string = "Not liked: %i" \
                                                   % (like.status_code)
                                     self.write_log(log_string)
+                                    return False
                                     # Some error. If repeated - can be ban!
                                     if self.error_400 >= self.error_400_to_ban:
                                         # Look like you banned!
@@ -276,7 +281,6 @@ class InstaBot:
                                     log_string = "Not liked: %i" \
                                                   % (like.status_code)
                                     self.write_log(log_string)
-                                    return False
                                     # Some error.
                                 i += 1
                                 if delay:
@@ -289,7 +293,8 @@ class InstaBot:
                         else:
                             return False
                     else:
-                        return False
+                        return False     
+
             else:
                 self.write_log("No media to like!")
 
@@ -378,6 +383,7 @@ class InstaBot:
                 self.get_media_id_by_tag(random.choice(self.tag_list))
                 self.this_tag_like_count = 0
                 self.max_tag_like_count = random.randint(1, self.max_like_for_one_tag)
+        
             # ------------------- Like -------------------
             self.new_auto_mod_like()
             # ------------------- Follow -------------------
@@ -397,6 +403,9 @@ class InstaBot:
             # You have media_id to like:
             if self.like_all_exist_media(media_size=1, delay=False):
                 # If like go to sleep:
+                currentTime = datetime.datetime.now() - startTime
+                log_string = '----------------------------------------------> WORK TIME %s:' %(currentTime)
+                self.write_log(log_string)
                 self.next_iteration["Like"] = time.time() +\
                                               self.add_time(self.like_delay)
                 # Count this tag likes:
